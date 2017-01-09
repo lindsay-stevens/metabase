@@ -11,8 +11,9 @@
                              [dashboard-card :refer [DashboardCard create-dashboard-card! update-dashboard-card! delete-dashboard-card!]]
                              [interface :as models]
                              [hydrate :refer [hydrate]]
-                             [public-dashboard :refer [PublicDashboard]])
-            [metabase.models.revision :as revision]
+                             [public-dashboard :refer [PublicDashboard]]
+                             [revision :as revision])
+            [metabase.public-settings :as public-settings]
             [metabase.util :as u]
             [metabase.util.schema :as su]))
 
@@ -159,6 +160,8 @@
    (If this Dashboard has already been shared, it will return the existing public link rather than creating a new one.)"
   [dashboard-id]
   (check-superuser)
+  (check (public-settings/enable-public-sharing)
+    400 "Public sharing is not enabled.")
   (read-check Dashboard dashboard-id)
   {:uuid (or (db/select-one-field :uuid PublicDashboard :dashboard_id dashboard-id)
              (:uuid (db/insert! PublicDashboard

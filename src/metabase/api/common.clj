@@ -66,7 +66,7 @@
 (defn check-exists?
   "Check that object with ID (or other key/values) exists in the DB, or throw a 404."
   ([entity id]
-   (check-exists? :id id))
+   (check-exists? entity :id id))
   ([entity k v & more]
    (check-404 (apply db/exists? entity k v more))))
 

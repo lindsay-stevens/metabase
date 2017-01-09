@@ -21,7 +21,8 @@
                              [public-card :refer [PublicCard]]
                              [table :refer [Table]]
                              [view-log :refer [ViewLog]])
-            (metabase [query-processor :as qp]
+            (metabase [public-settings :as public-settings]
+                      [query-processor :as qp]
                       [util :as u])
             [metabase.util.schema :as su]))
 
@@ -360,6 +361,8 @@
    (If this Card has already been shared, it will return the existing public link rather than creating a new one.)"
   [card-id]
   (check-superuser)
+  (check (public-settings/enable-public-sharing)
+    400 "Public sharing is not enabled.")
   (read-check Card card-id)
   {:uuid (or (db/select-one-field :uuid PublicCard :card_id card-id)
              (:uuid (db/insert! PublicCard

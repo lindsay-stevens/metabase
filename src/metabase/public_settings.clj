@@ -82,7 +82,7 @@
    :has_sample_dataset    (db/exists? 'Database, :is_sample true)
    :map_tile_server_url   (map-tile-server-url)
    :password_complexity   password/active-password-complexity
-   ;; :public_sharing        (enable-public-sharing)
+   :public_sharing        (enable-public-sharing)
    :report_timezone       (setting/get :report-timezone)
    :setup_token           ((resolve 'metabase.setup/token-value))
    :site_name             (site-name)
