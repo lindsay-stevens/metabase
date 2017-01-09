@@ -10,7 +10,8 @@
                              [dashboard :refer [Dashboard], :as dashboard]
                              [dashboard-card :refer [DashboardCard create-dashboard-card! update-dashboard-card! delete-dashboard-card!]]
                              [interface :as models]
-                             [hydrate :refer [hydrate]])
+                             [hydrate :refer [hydrate]]
+                             [public-dashboard :refer [PublicDashboard]])
             [metabase.models.revision :as revision]
             [metabase.util :as u]
             [metabase.util.schema :as su]))
@@ -149,6 +150,27 @@
     :id          id
     :user-id     *current-user-id*
     :revision-id revision_id))
+
+
+;;; ------------------------------------------------------------ Sharing is Caring ------------------------------------------------------------
+
+(defendpoint POST "/:dashboard-id/public_link"
+  "Generate publically-accessible links for this Dashboard. Returns UUID to be used in public links.
+   (If this Dashboard has already been shared, it will return the existing public link rather than creating a new one.)"
+  [dashboard-id]
+  (check-superuser)
+  (read-check Dashboard dashboard-id)
+  {:uuid (or (db/select-one-field :uuid PublicDashboard :dashboard_id dashboard-id)
+             (:uuid (db/insert! PublicDashboard
+                      :dashboard_id dashboard-id
+                      :creator_id   *current-user-id*)))})
+
+(defendpoint DELETE "/:dashboard-id/public_link"
+  "Delete the publically-accessible link to this Dashboard."
+  [dashboard-id]
+  (check-superuser)
+  (check-exists? PublicDashboard :dashboard_id dashboard-id)
+  (db/cascade-delete! PublicDashboard :dashboard_id dashboard-id))
 
 
 (define-routes)

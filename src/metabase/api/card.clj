@@ -18,6 +18,7 @@
                              [interface :as models]
                              [label :refer [Label]]
                              [permissions :as perms]
+                             [public-card :refer [PublicCard]]
                              [table :refer [Table]]
                              [view-log :refer [ViewLog]])
             (metabase [query-processor :as qp]
@@ -350,6 +351,27 @@
   [card-id parameters]
   {parameters (s/maybe su/JSONString)}
   (dataset-api/as-json (run-query-for-card card-id (json/parse-string parameters keyword) nil)))
+
+
+;;; ------------------------------------------------------------ Sharing is Caring ------------------------------------------------------------
+
+(defendpoint POST "/:card-id/public_link"
+  "Generate publically-accessible links for this Card. Returns UUID to be used in public links.
+   (If this Card has already been shared, it will return the existing public link rather than creating a new one.)"
+  [card-id]
+  (check-superuser)
+  (read-check Card card-id)
+  {:uuid (or (db/select-one-field :uuid PublicCard :card_id card-id)
+             (:uuid (db/insert! PublicCard
+                      :card_id    card-id
+                      :creator_id *current-user-id*)))})
+
+(defendpoint DELETE "/:card-id/public_link"
+  "Delete the publically-accessible link to this Card."
+  [card-id]
+  (check-superuser)
+  (check-exists? PublicCard :card_id card-id)
+  (db/cascade-delete! PublicCard :card_id card-id))
 
 
 (define-routes)
